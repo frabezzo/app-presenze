@@ -3,6 +3,7 @@ import pandas as pd
 import google.generativeai as genai
 import PIL.Image
 import json
+import re
 
 st.set_page_config(page_title="Gestione Presenze & Timbrature", layout="wide")
 
@@ -73,4 +74,6 @@ if uploaded_file and api_key:
                     Se ci sono solo 2 timbrature e la seconda è dopo le 15:00, posizionala comunque su "u2" e lascia vuoti u1 ed e2.
                     """
                     response = model.generate_content([prompt, image])
-                    text_resp = response.text.strip().replace("```json", "").replace("
+                    
+                    # Pulizia pulita e sicura del testo JSON
+                    text_resp = re.sub(r'
