@@ -49,7 +49,7 @@ if uploaded_file and api_key:
         if st.button("🔍 Analizza Immagine con AI", type="primary"):
             with st.spinner("Estraggo le timbrature dall'immagine..."):
                 try:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     prompt = """
                     Analizza questa tabella di presenze/timbrature.
                     Restituisci unicamente un array JSON di oggetti, senza formattazione Markdown extra o blocchi di codice.
