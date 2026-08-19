@@ -58,11 +58,9 @@ def generate_excel_download(registro):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         for mese, dati in registro.items():
-            # Foglio per la tabella completa del mese
             sheet_name_tot = f"{mese[:20]} Tot"
             dati["totale_df"].to_excel(writer, sheet_name=sheet_name_tot, index=False)
             
-            # Foglio per le sole timbrature inserite a mano
             if not dati["soltanmante_inserite_df"].empty:
                 sheet_name_man = f"{mese[:20]} Manuali"
                 dati["soltanmante_inserite_df"].to_excel(writer, sheet_name=sheet_name_man, index=False)
@@ -116,13 +114,15 @@ if 'df_edited' in st.session_state:
     results = []
     only_added_rows = []
     
+    has_original = 'df_original' in st.session_state
+    
     for idx, row in edited_df.iterrows():
         e1_m = time_to_minutes(row.get('e1'))
         u1_m = time_to_minutes(row.get('u1'))
         e2_m = time_to_minutes(row.get('e2'))
         u2_m = time_to_minutes(row.get('u2'))
         
-        orig_row = st.session_state['df_original'].iloc[idx] if 'df_original' in st.session_state and idx < len(st.session_state['df_original']) else {}
+        orig_row = st.session_state['df_original'].iloc[idx] if has_original and idx < len(st.session_state['df_original']) else None
         
         added_dict = {
             "Data": row.get('data'),
@@ -137,7 +137,10 @@ if 'df_edited' in st.session_state:
         mapping = [('e1', 'Entrata 1'), ('u1', 'Uscita 1 (Pranzo)'), ('e2', 'Rientro 2 (Pranzo)'), ('u2', 'Uscita Finale')]
         for col_code, col_name in mapping:
             val = str(row.get(col_code, '')).strip()
-            orig_val = str(orig_row.get(col_code, '')).strip() if orig_row else ""
+            orig_val = ""
+            if orig_row is not None:
+                orig_val = str(orig_row.get(col_code, '')).strip()
+                
             if val and val != orig_val and val not in ["nan", "None"]:
                 added_dict[col_name] = val
                 has_added = True
@@ -199,7 +202,6 @@ if st.session_state['registro_storico']:
     st.markdown("---")
     st.header("📚 Registro Storico Mesi Salvati")
     
-    # Pulsante per scaricare l'intero archivio in Excel
     excel_file = generate_excel_download(st.session_state['registro_storico'])
     st.download_button(
         label="📥 Scarica Storico Completo (File Excel)",
