@@ -3,6 +3,7 @@ import pandas as pd
 import google.generativeai as genai
 import PIL.Image
 import json
+import io
 
 st.set_page_config(page_title="Gestione Presenze & Timbrature", layout="wide")
 
@@ -52,6 +53,21 @@ def clean_json_response(raw_text):
         clean = clean.split("json")[-1]
     clean = clean.replace("`", "").strip()
     return clean
+
+def generate_excel_download(registro):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        for mese, dati in registro.items():
+            # Foglio per la tabella completa del mese
+            sheet_name_tot = f"{mese[:20]} Tot"
+            dati["totale_df"].to_excel(writer, sheet_name=sheet_name_tot, index=False)
+            
+            # Foglio per le sole timbrature inserite a mano
+            if not dati["soltanmante_inserite_df"].empty:
+                sheet_name_man = f"{mese[:20]} Manuali"
+                dati["soltanmante_inserite_df"].to_excel(writer, sheet_name=sheet_name_man, index=False)
+    output.seek(0)
+    return output
 
 if uploaded_file and api_key:
     genai.configure(api_key=api_key)
@@ -182,6 +198,16 @@ if 'df_edited' in st.session_state:
 if st.session_state['registro_storico']:
     st.markdown("---")
     st.header("📚 Registro Storico Mesi Salvati")
+    
+    # Pulsante per scaricare l'intero archivio in Excel
+    excel_file = generate_excel_download(st.session_state['registro_storico'])
+    st.download_button(
+        label="📥 Scarica Storico Completo (File Excel)",
+        data=excel_file,
+        file_name="Storico_Presenze_Cartellini.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type="secondary"
+    )
     
     mese_selezionato = st.selectbox("Seleziona il mese da visualizzare:", list(st.session_state['registro_storico'].keys()))
     
