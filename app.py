@@ -3,7 +3,6 @@ import pandas as pd
 import google.generativeai as genai
 import PIL.Image
 import json
-import io
 
 st.set_page_config(page_title="Gestione Presenze & Timbrature", layout="wide")
 
